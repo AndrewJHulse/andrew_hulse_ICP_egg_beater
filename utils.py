@@ -1,5 +1,5 @@
 import pygame as pg
-from andrew_hulse_ICP_egg_beater.settings import *
+from settings import *
 from math import floor
 
 class Map:
@@ -26,3 +26,13 @@ class Spritesheet:
         image = new_image
         return image
 
+class Cooldown():
+    def __init__(self):
+        self.current_time = 0
+        self.event_time = 0
+        self.delta = 0
+    def ticking(self):
+        self.data = self.current_time - self.event_time
+        # print(self.data)
+    def timer(self):
+        self.current_time = floor(pg.time.get_ticks()/1000)
