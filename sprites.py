@@ -129,7 +129,9 @@ class Player(Sprite):
         pass
     # Updates the game every frame to check for collision, animation, inputs, etc.
     def update(self):
+        self.acc = vec(0,0)
         self.get_keys()
+        self.acc.x += self.vel.x
         self.animate()
         self.rect.center = self.pos
         self.pos += self.vel * self.game.dt
@@ -138,7 +140,7 @@ class Player(Sprite):
             self.coins += 1
             print(f"I have {self.coins} coins")
             # spawns a bunch of particles
-            for i in range(100):
+            for i in range(50000):
                 Particle(self.game, hits[0].rect.x, hits[0].rect.y)
                 hits[0].kill()
 
@@ -215,7 +217,7 @@ class Particle(Sprite):
         Sprite.__init__(self, self.groups)
         self.game = game
         self.image = pg.Surface((TILESIZE/4,TILESIZE/4))
-        self.image.fill(GOLD)
+        self.image.fill(WHITE)
         self.rect = self.image.get_rect()
         self.vel = vec(randint(-180, 180),randint(-180, 180))
         self.pos = vec(x,y)
@@ -263,6 +265,17 @@ class Coin(Sprite):
         self.pos = vec(x,y) * TILESIZE
         self.rect.center = self.pos
 
-
+class FloorTile(Sprite):
+    def __init__(self, game, x, y):
+        self.groups = game.all_sprites, game.all_tiles
+        Sprite.__init__(self, self.groups)
+        self.game = game
+        self.image = pg.Surface((TILESIZE,TILESIZE))
+        self.image.fill(CYAN)
+        self.rect = self.image.get_rect()
+        self.rect.x = x * TILESIZE
+        self.rect.y = y * TILESIZE
+        self.x = x * TILESIZE
+        self.y = y * TILESIZE
 
 
