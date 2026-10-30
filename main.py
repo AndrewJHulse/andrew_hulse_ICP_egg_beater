@@ -39,22 +39,21 @@ class Game:
         self.game_dir = path.dirname(__file__)
         self.game_save_file = path.join(self.game_dir,"highscore.txt")
         self.img_dir = path.join(self.game_dir, 'images')
-        self.snd_dir = path.join(self.game_dir, 'sounds')
         # sound stuff
         self.snd_dir = path.join(self.game_dir, 'sounds')
-        self.pickup_snd = pg.mixer.Sound(path.join(self.snd_dir, "sounds_coin_pickup.wav"))
+        self.pickup_snd = pg.mixer.Sound(path.join(self.snd_dir, "coin_pickup.mp3"))
+
         self.map = Map(path.join(self.game_dir, map))
 
-
-        # want to see if file exists and create if not
+        # file creation
         try:
-            with open(self.game_save_file, "x", encoding="utf-8") as file:
+            with open(self.game_save_file, 'x', encoding="utf-8") as file:
                 file.write("Hello, World!")
             print("File created successfully.")
         except FileExistsError:
             print("File already exists. No action taken.")
 
-        # open file and try to set high score with except set high score to zero
+        # opens the file and sets the highscore to 0
         with open(self.game_save_file, 'r') as f:
             try:
                 self.highscore = int(f.read())
@@ -62,7 +61,7 @@ class Game:
             except:
                 self.highscore = 0
                 print("high score is zero")
-
+# all sprites being instantiated
     def new(self):
         self.load_data('level1.txt')
         self.all_sprites = pg.sprite.Group()
@@ -70,9 +69,7 @@ class Game:
         self.all_mobs = pg.sprite.Group()
         self.all_coins = pg.sprite.Group()
         self.all_particles = pg.sprite.Group()
-        # instantiate player here
-        
-        print(self.map.data)
+
         for row, tiles in enumerate(self.map.data):
             for col, tile in enumerate(tiles):
                 if tile == '1':

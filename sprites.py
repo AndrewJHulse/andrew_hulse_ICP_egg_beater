@@ -137,6 +137,10 @@ class Player(Sprite):
         if hits:
             self.coins += 1
             print(f"I have {self.coins} coins")
+            # spawns a bunch of particles
+            for i in range(100):
+                Particle(self.game, hits[0].rect.x, hits[0].rect.y)
+                hits[0].kill()
 
         self.hit_rect.centerx = self.pos.x
         collide_with_walls(self, self.game.all_walls, 'x')
@@ -211,22 +215,23 @@ class Particle(Sprite):
         Sprite.__init__(self, self.groups)
         self.game = game
         self.image = pg.Surface((TILESIZE/4,TILESIZE/4))
-        self.image.fill(GREEN)
+        self.image.fill(GOLD)
         self.rect = self.image.get_rect()
-        self.vel = vec(0,0)
+        self.vel = vec(randint(-180, 180),randint(-180, 180))
         self.pos = vec(x,y)
         self.rect.center = self.pos
-        self.speed = 15
+        self.speed = 5
         self.countdown = Cooldown()
         self.countdown.event_time = floor(pg.time.get_ticks()/1000)
 
     def update(self):
         self.countdown.ticking()
-        self.rect.x += self.speed * randint(-5, 5)
-        self.rect.y += self.speed * randint(-5, 5)
+        self.pos += self.vel * self.speed * self.game.dt
         if self.countdown.delta > 1:
             self.kill()
             print(str(len(self.game.all_particles)))
+        self.rect.x = self.pos.x
+        self.rect.y = self.pos.y
 
 # Making a green wall sprite.
 class Wall(Sprite):
@@ -242,12 +247,13 @@ class Wall(Sprite):
         self.x = x * TILESIZE
         self.y = y * TILESIZE
 
+# creates a coin
 class Coin(Sprite):
     def __init__(self, game, x, y):
         self.groups = game.all_sprites, game.all_coins
         Sprite.__init__(self, self.groups)
         self.game = game
-        self.image = pg.Su|rface((TILESIZE, TILESIZE))
+        self.image = pg.Surface((TILESIZE, TILESIZE))
         pg.draw.circle(self.image, GOLD, (TILESIZE/2, TILESIZE/2), TILESIZE/2)
         # pg.draw.ellipse(self.image, GOLD, (TILESIZE/2, TILESIZE/2), TILESIZE/2)
         self.image.set_colorkey(BLACK)
