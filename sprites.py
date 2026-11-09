@@ -69,41 +69,45 @@ class Player(Sprite):
         self.image = pg.Surface((TILESIZE,TILESIZE))
         self.image.set_colorkey(BLACK)
         self.rect = self.image.get_rect()
-        self.rect.x = x
-        self.rect.y = y
-        # self.vx, self.vy = 0,0
+        # player motion
         self.vel = vec(0,0)
+        self.acc = vec(0,0)
         self.pos = vec(x,y) * TILESIZE/2
-        # self.x = x * TILESIZE
-        # self.y = y * TILESIZE
+        self.cofric = PLAYER_FRIC
         self.hit_rect = PLAYER_HIT_RECT
         # stuff with animation
         self.current_frame = 0
         self.last_update = 0
-        # accounting for states of the player.
+        # states of the player.
         self.jumping = False
         self.moving = False
         self.coins = 0
+        self.dash_time = 0
 
     # gets player input
     def get_keys(self):
-        # self.vx,self.vy = 0,0
-        self.vel = vec(0,0)
         keys = pg.key.get_pressed()
         if keys[pg.K_w]:
-            # self.vy = -PLAYER_SPEED
-            self.vel.y = -PLAYER_SPEED
+            self.acc.y = -PLAYER_ACC
+            if keys[pg.K_q] and self.dash_time == 0:
+                self.vel.y = -DASH_SPEED
         if keys[pg.K_a]:
-            # self.vx = -PLAYER_SPEED
-            self.vel.x = -PLAYER_SPEED
+            self.acc.x = -PLAYER_ACC
+            if keys[pg.K_q] and self.dash_time == 0:
+                self.vel.x = -DASH_SPEED
         if keys[pg.K_s]:
-            # self.vy = PLAYER_SPEED
-            self.vel.y = PLAYER_SPEED
+            self.acc.y = PLAYER_ACC
+            if keys[pg.K_q] and self.dash_time == 0:
+                self.vel.y = DASH_SPEED
         if keys[pg.K_d]:
-            # self.vx = PLAYER_SPEED
-            self.vel.x = PLAYER_SPEED
-        if self.vel.x != 0 and self.vel.y != 0:
-             self.vel *= 0.7071
+            self.acc.x = PLAYER_ACC
+            if keys[pg.K_q] and self.dash_time == 0:
+                self.vel.x = DASH_SPEED
+        if keys[pg.K_q] and self.dash_time == 0:
+            self.dash_time = 5
+        # Unknown if this is needed.
+        # if self.vel.x != 0 and self.vel.y != 0:
+        #      self.vel *= 0.7071
     def load_image(self):
         self.idle_frames = self.spritesheet.get_image(0,0,TILESIZE, TILESIZE), self.spritesheet.get_image(TILESIZE,0,TILESIZE, TILESIZE)
     def animate(self):
@@ -129,18 +133,32 @@ class Player(Sprite):
         pass
     # Updates the game every frame to check for collision, animation, inputs, etc.
     def update(self):
+        # the gravity doesnt really work
+        # gravity or no gravity
         self.acc = vec(0,0)
+        #self.acc = vec(0,9.8)
         self.get_keys()
-        self.acc.x += self.vel.x
+        self.acc.x += self.vel.x * self.cofric
+        # side scroller fric
+        #self.acc.y += self.vel.y
+        # top down fric
+        self.acc.y += self.vel.y * self.cofric
         self.animate()
-        self.rect.center = self.pos
-        self.pos += self.vel * self.game.dt
+        self.vel += self.acc
+        max_fall_speed = TILESIZE / max(self.game.dt, 0.001)
+        self.vel.y = min(self.vel.y, max_fall_speed)
+        if abs(self.vel.x) < 0.1:
+            self.vel.x = 0
+        if abs(self.vel.y) < 0.1:
+            self.vel.y = 0
+        self.pos += self.vel * self.game.dt + 0.5 * self.acc * (self.game.dt ** 2)
         hits = pg.sprite.spritecollide(self, self.game.all_coins, True)
+
         if hits:
             self.coins += 1
             print(f"I have {self.coins} coins")
             # spawns a bunch of particles
-            for i in range(50000):
+            for i in range(50):
                 Particle(self.game, hits[0].rect.x, hits[0].rect.y)
                 hits[0].kill()
 

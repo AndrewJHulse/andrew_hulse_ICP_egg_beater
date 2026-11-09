@@ -8,9 +8,9 @@ Input - keys, buttons, voice, mouse, touch, breath, movement, joysick
 Process - input processed (direction of control, magnitude)
 Output - Draw new frames, pixels, sound, haptics (senses)
 
-GOALS: Make a spatula for evil spongebob, beat evil spongebob by making an egg projectile and a collectible that gives the egg gun.
-RULES: Don't get killed by evil spongebob
-FEEDBACK: 
+GOALS: Beat a bunch of bosses in a row
+RULES: Don't die by the bosses can't leave the map
+FEEDBACK: pressing q makes the character dash, using wasd for movement, 
 FREEDOM: 
 '''
 
@@ -21,7 +21,7 @@ from sprites import *
 from utils import *
 
 
-# the game class a blueprint for the whole game...
+# the game class a blueprint for the whole game
 class Game:
     # 
     def __init__(self):
@@ -37,7 +37,7 @@ class Game:
 
     def load_data(self, map):
         self.game_dir = path.dirname(__file__)
-        self.game_save_file = path.join(self.game_dir,"highscore.txt")
+        self.game_save_file = path.join(self.game_dir, "highscore.txt")
         self.img_dir = path.join(self.game_dir, 'images')
         # sound stuff
         self.snd_dir = path.join(self.game_dir, 'sounds')
@@ -63,6 +63,8 @@ class Game:
                 print("high score is zero")
 # all sprites being instantiated
     def new(self):
+        
+        # all the Class sprite groups
         self.load_data('level1.txt')
         self.all_sprites = pg.sprite.Group()
         self.all_walls = pg.sprite.Group()
@@ -71,6 +73,7 @@ class Game:
         self.all_particles = pg.sprite.Group()
         self.all_tiles = pg.sprite.Group()
 
+# all stuff on the map made
         for row, tiles in enumerate(self.map.data):
             for col, tile in enumerate(tiles):
                 if tile == '1':
@@ -95,8 +98,9 @@ class Game:
     def events(self):
         for event in pg.event.get():
             if event.type == pg.QUIT:
-                with open(path.join(self.game_dir, self.game_save_file), 'w') as f:
-                    f.write(str(self.score))
+                if self.score > self.highscore:
+                    with open(path.join(self.game_dir, self.game_save_file), 'w') as f:
+                        f.write(str(self.score))
                 if self.playing:
                     self.playing = False
                 self.running = False
@@ -118,9 +122,9 @@ class Game:
     def draw(self):
         self.screen.fill(BLUE)
         self.all_sprites.draw(self.screen)
-        self.draw_text("Frames per second: " + str(floor(1/self.dt) ), 24, WHITE, WIDTH/2, HEIGHT/4)
-        self.draw_text(f"Coins:{self.player.coins} ", 24, WHITE, WIDTH/2, HEIGHT/9)
-        self.draw_text(f"Highscore:{self.highscore} ", 24, WHITE, WIDTH/2, HEIGHT/11)
+        self.draw_text("Frames per second: " + str(floor(1/self.dt) ), 24, BLACK, 110, 0)
+        self.draw_text(f"Coins:{self.player.coins} ", 24, BLACK, WIDTH-100, 0)
+        # self.draw_text(f"High score:{self.highscore} ", 24, WHITE, WIDTH/2, HEIGHT/11)
         pg.display.flip()
 
 if __name__ == "__main__":
