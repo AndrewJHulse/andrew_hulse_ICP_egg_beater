@@ -120,7 +120,7 @@ class Game:
 
 
     def draw(self):
-        self.screen.fill(BLUE)
+        self.screen.fill(LIGHT_GRAY)
         self.all_sprites.draw(self.screen)
         self.draw_text("Frames per second: " + str(floor(1/self.dt) ), 24, BLACK, 110, 0)
         self.draw_text(f"Coins:{self.player.coins} ", 24, BLACK, WIDTH-100, 0)

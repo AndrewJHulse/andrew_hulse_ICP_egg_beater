@@ -35,7 +35,27 @@ def collide_with_walls(sprite, group, dir):
                 sprite.pos.y = hits[0].rect.bottom + sprite.hit_rect.height / 2
             sprite.vel.y = 0
             sprite.hit_rect.centery = sprite.pos.y
-
+def collide_with_enemies(sprite, group, dir):
+    if dir == 'x':
+        hits = pg.sprite.spritecollide(sprite, group, False, collide_hit_rect)
+        if hits:
+            # print("collided with wall from x dir")
+            if hits[0].rect.centerx > sprite.hit_rect.centerx:
+                sprite.pos.x = hits[0].rect.left - sprite.hit_rect.width / 2
+            if hits[0].rect.centerx < sprite.hit_rect.centerx:
+                sprite.pos.x = hits[0].rect.right + sprite.hit_rect.width / 2
+            sprite.vel.x = 0
+            sprite.hit_rect.centerx = sprite.pos.x
+    if dir == 'y':
+        hits = pg.sprite.spritecollide(sprite, group, False, collide_hit_rect)
+        if hits:
+            # print("collided with wall from y dir")
+            if hits[0].rect.centery > sprite.hit_rect.centery:
+                sprite.pos.y = hits[0].rect.top - sprite.hit_rect.height / 2
+            if hits[0].rect.centery < sprite.hit_rect.centery:
+                sprite.pos.y = hits[0].rect.bottom + sprite.hit_rect.height / 2
+            sprite.vel.y = 0
+            sprite.hit_rect.centery = sprite.pos.y
 def collide_with_coins(sprite, group, dir):
     if dir == 'x':
         hits = pg.sprite.spritecollide(sprite, group, True, collide_hit_rect)
@@ -228,6 +248,12 @@ class Mob(Sprite):
         self.hit_rect.centery = self.pos.y
         collide_with_walls(self, self.game.all_walls, 'y')
         self.rect.center = self.hit_rect.center
+        self.hit_rect.centerx = self.pos.x
+        collide_with_enemies(self, self.game.all_mobs, 'x')
+        self.hit_rect.centery = self.pos.y
+        collide_with_enemies(self, self.game.all_mobs, 'y')
+        self.rect.center = self.hit_rect.center
+        
 
 class Particle(Sprite):
     def __init__(self, game, x, y):
@@ -235,7 +261,7 @@ class Particle(Sprite):
         Sprite.__init__(self, self.groups)
         self.game = game
         self.image = pg.Surface((TILESIZE/4,TILESIZE/4))
-        self.image.fill(WHITE)
+        self.image.fill(YELLOW)
         self.rect = self.image.get_rect()
         self.vel = vec(randint(-180, 180),randint(-180, 180))
         self.pos = vec(x,y)
@@ -260,7 +286,7 @@ class Wall(Sprite):
         Sprite.__init__(self, self.groups)
         self.game = game
         self.image = pg.Surface((TILESIZE,TILESIZE))
-        self.image.fill(GREEN)
+        self.image.fill(DARK_GRAY)
         self.rect = self.image.get_rect()
         self.rect.x = x * TILESIZE
         self.rect.y = y * TILESIZE
