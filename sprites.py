@@ -4,6 +4,7 @@ from settings import *
 from utils import *
 from os import path
 from random import randint
+from math import *
 
 vec = pg.math.Vector2
 
@@ -101,11 +102,15 @@ class Player(Sprite):
         # states of the player.
         self.jumping = False
         self.moving = False
+        self.now = pg.time.get_ticks()
         self.coins = 0
         self.dash_time = 0
+        self.dash_upgrade = 1
+
 
     # gets player input
     def get_keys(self):
+
         keys = pg.key.get_pressed()
         if keys[pg.K_w]:
             self.acc.y = -PLAYER_ACC
@@ -124,14 +129,25 @@ class Player(Sprite):
             if keys[pg.K_q] and self.dash_time == 0:
                 self.vel.x = DASH_SPEED
         if keys[pg.K_q] and self.dash_time == 0:
-            self.dash_time = 5
-        # Unknown if this is needed.
-        # if self.vel.x != 0 and self.vel.y != 0:
-        #      self.vel *= 0.7071
+            self.dash_time = 5000 * self.dash_upgrade
+        if keys[pg.K_f]:
+            self.pew()
+
+    def pew(self):
+        mpos = pg.mouse.get_pos()
+        targetx = mpos[0]
+        targety = mpos[1]
+        dx = targetx = self.hit_rect.x
+        dy = targety = self.hit_rect.y
+        angle = atan2(dx, dy)
+        speed_x = 10 * cos(angle)
+        speed_y = 10 * sin(angle)
+        Projectile(self.game, self.rect.centerx, self.rect.centery, TILESIZE/8, TILESIZE/8, speed_x,speed_y)
+
     def load_image(self):
         self.idle_frames = self.spritesheet.get_image(0,0,TILESIZE, TILESIZE), self.spritesheet.get_image(TILESIZE,0,TILESIZE, TILESIZE)
     def animate(self):
-        # use the time element to get now
+        # use the time element to get the current time
         now = pg.time.get_ticks()
         if not self.jumping and not self.moving:
             if now - self.last_update > 350:
@@ -254,6 +270,29 @@ class Mob(Sprite):
         collide_with_enemies(self, self.game.all_mobs, 'y')
         self.rect.center = self.hit_rect.center
         
+class Projectile(Sprite):
+    def __init__(self, game, x, y, w, h, sx, sy):
+        self.groups = game.all_sprites, game.all_projectiles
+        Sprite.__init__(self, self.groups)
+        self.game = game
+        self.image = pg.surface((w, h))
+        self.image.set_colorkey(BLACK)
+        self.rect = self.image.get_rect()
+        self.radius = TILESIZE/8
+        pg.draw.circle(self.image, YELLOW, self.rect.center, self.radius)
+        self.rect.x = x
+        self.rect.y = y
+        self.speed_x = sx
+        self.speed_y = sy
+        self.fired = False
+
+    def update(self):
+        self.rect.x = self.speed_x
+        self.rect.y = self.speed_y
+
+        if self.rect.y < 0 or self.rect.y > HEIGHT:
+            self.kill()
+
 
 class Particle(Sprite):
     def __init__(self, game, x, y):

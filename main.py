@@ -72,6 +72,7 @@ class Game:
         self.all_coins = pg.sprite.Group()
         self.all_particles = pg.sprite.Group()
         self.all_tiles = pg.sprite.Group()
+        self.all_projectiles = pg.sprite.Group()
 
 # all stuff on the map made
         for row, tiles in enumerate(self.map.data):
