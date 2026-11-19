@@ -102,10 +102,16 @@ class Player(Sprite):
         # states of the player.
         self.jumping = False
         self.moving = False
-        self.now = pg.time.get_ticks()
         self.coins = 0
-        self.dash_time = 0
+        # cooldowns.
+        self.dash_time = 3000
+        self.last_dash = 0
+        self.fire_time = 250
+        self.last_fire = 0
+        # Ways to upgrade the player.
         self.dash_upgrade = 1
+        self.projectile_speed_mod = 1
+        self.damage_mod = 1
 
 
     # gets player input
@@ -114,35 +120,37 @@ class Player(Sprite):
         keys = pg.key.get_pressed()
         if keys[pg.K_w]:
             self.acc.y = -PLAYER_ACC
-            if keys[pg.K_q] and self.dash_time == 0:
+            if keys[pg.K_q] and self.now - self.last_dash >= self.dash_time:
                 self.vel.y = -DASH_SPEED
         if keys[pg.K_a]:
             self.acc.x = -PLAYER_ACC
-            if keys[pg.K_q] and self.dash_time == 0:
+            if keys[pg.K_q] and self.now - self.last_dash >= self.dash_time:
                 self.vel.x = -DASH_SPEED
         if keys[pg.K_s]:
             self.acc.y = PLAYER_ACC
-            if keys[pg.K_q] and self.dash_time == 0:
+            if keys[pg.K_q] and self.now - self.last_dash >= self.dash_time:
                 self.vel.y = DASH_SPEED
         if keys[pg.K_d]:
             self.acc.x = PLAYER_ACC
-            if keys[pg.K_q] and self.dash_time == 0:
+            if keys[pg.K_q] and self.now - self.last_dash >= self.dash_time:
                 self.vel.x = DASH_SPEED
-        if keys[pg.K_q] and self.dash_time == 0:
-            self.dash_time = 5000 * self.dash_upgrade
-        if keys[pg.K_f]:
-            self.pew()
+        if keys[pg.K_q] and self.now - self.last_dash >= self.dash_time:
+            self.dash_time = 3000 * self.dash_upgrade
+            self.last_dash = self.now
+        if keys[pg.K_f] and self.now - self.last_fire >= self.fire_time:
+            self.fire()
+            self.last_fire = self.now
 
-    def pew(self):
+    def fire(self):
         mpos = pg.mouse.get_pos()
         targetx = mpos[0]
         targety = mpos[1]
-        dx = targetx = self.hit_rect.x
-        dy = targety = self.hit_rect.y
+        dx = targetx - self.hit_rect.x
+        dy = targety - self.hit_rect.y
         angle = atan2(dx, dy)
-        speed_x = 10 * cos(angle)
-        speed_y = 10 * sin(angle)
-        Projectile(self.game, self.rect.centerx, self.rect.centery, TILESIZE/8, TILESIZE/8, speed_x,speed_y)
+        speed_x = PROJECTILE_SPEED * self.projectile_speed_mod * sin(angle)
+        speed_y = PROJECTILE_SPEED * self.projectile_speed_mod * cos(angle)
+        Projectile(self.game, self.pos.x, self.pos.y, TILESIZE/4, TILESIZE/4, speed_x, speed_y)
 
     def load_image(self):
         self.idle_frames = self.spritesheet.get_image(0,0,TILESIZE, TILESIZE), self.spritesheet.get_image(TILESIZE,0,TILESIZE, TILESIZE)
@@ -189,6 +197,7 @@ class Player(Sprite):
             self.vel.y = 0
         self.pos += self.vel * self.game.dt + 0.5 * self.acc * (self.game.dt ** 2)
         hits = pg.sprite.spritecollide(self, self.game.all_coins, True)
+        self.now = pg.time.get_ticks()
 
         if hits:
             self.coins += 1
@@ -275,7 +284,7 @@ class Projectile(Sprite):
         self.groups = game.all_sprites, game.all_projectiles
         Sprite.__init__(self, self.groups)
         self.game = game
-        self.image = pg.surface((w, h))
+        self.image = pg.Surface((w,h))
         self.image.set_colorkey(BLACK)
         self.rect = self.image.get_rect()
         self.radius = TILESIZE/8
@@ -285,12 +294,11 @@ class Projectile(Sprite):
         self.speed_x = sx
         self.speed_y = sy
         self.fired = False
-
     def update(self):
-        self.rect.x = self.speed_x
-        self.rect.y = self.speed_y
-
-        if self.rect.y < 0 or self.rect.y > HEIGHT:
+        self.rect.x += self.speed_x
+        self.rect.y += self.speed_y
+        hits = pg.sprite.spritecollide(self, self.game.all_mobs, True)
+        if self.rect.y < 0 or self.rect.y > HEIGHT or hits:
             self.kill()
 
 
@@ -304,8 +312,8 @@ class Particle(Sprite):
         self.rect = self.image.get_rect()
         self.vel = vec(randint(-180, 180),randint(-180, 180))
         self.pos = vec(x,y)
-        self.rect.center = self.pos
         self.speed = 5
+        self.rect.center = self.pos
         self.countdown = Cooldown()
         self.countdown.event_time = floor(pg.time.get_ticks()/1000)
 
@@ -314,7 +322,7 @@ class Particle(Sprite):
         self.pos += self.vel * self.speed * self.game.dt
         if self.countdown.delta > 1:
             self.kill()
-            print(str(len(self.game.all_particles)))
+            # print(str(len(self.game.all_particles)))
         self.rect.x = self.pos.x
         self.rect.y = self.pos.y
 
